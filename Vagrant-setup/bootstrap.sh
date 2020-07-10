@@ -1,14 +1,12 @@
-#!/bin/sh -e
-
 # Edit the following to change the name of the database user that will be created:
-APP_DB_USER=myapp
+APP_DB_USER=pagila
 APP_DB_PASS=dbpass
 
 # Edit the following to change the name of the database that is created (defaults to the user name)
 APP_DB_NAME=$APP_DB_USER
 
 # Edit the following to change the version of PostgreSQL that is installed
-PG_VERSION=9.4
+PG_VERSION=12
 
 ###########################################################
 # Changes below this line are probably not necessary
@@ -16,7 +14,7 @@ PG_VERSION=9.4
 print_db_usage () {
   echo "Your PostgreSQL database has been setup and can be accessed on your local machine on the forwarded port (default: 15432)"
   echo "  Host: localhost"
-  echo "  Port: 15432"
+  echo "  Port: 15432 (default value in Vagranfile)"
   echo "  Database: $APP_DB_NAME"
   echo "  Username: $APP_DB_USER"
   echo "  Password: $APP_DB_PASS"
@@ -37,7 +35,6 @@ print_db_usage () {
   echo "  PGUSER=$APP_DB_USER PGPASSWORD=$APP_DB_PASS psql -h localhost -p 15432 $APP_DB_NAME"
 }
 
-export DEBIAN_FRONTEND=noninteractive
 
 PROVISIONED_ON=/etc/vm_provision_on_timestamp
 if [ -f "$PROVISIONED_ON" ]
@@ -49,25 +46,18 @@ then
   exit
 fi
 
-PG_REPO_APT_SOURCE=/etc/apt/sources.list.d/pgdg.list
-if [ ! -f "$PG_REPO_APT_SOURCE" ]
-then
-  # Add PG apt repo:
-  echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > "$PG_REPO_APT_SOURCE"
+# Install the repository RPM:
+yum -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
 
-  # Add PGDG repo key:
-  wget --quiet -O - https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -
-fi
+# Install PostgreSQL:
+yum -y install "postgresql$PG_VERSION-server"
+"/usr/pgsql-$PG_VERSION/bin/postgresql-$PG_VERSION-setup" initdb
+systemctl enable "postgresql-$PG_VERSION.service"
+systemctl start "postgresql-$PG_VERSION.service"
 
-# Update package list and upgrade all packages
-apt-get update
-apt-get -y upgrade
-
-apt-get -y install "postgresql-$PG_VERSION" "postgresql-contrib-$PG_VERSION"
-
-PG_CONF="/etc/postgresql/$PG_VERSION/main/postgresql.conf"
-PG_HBA="/etc/postgresql/$PG_VERSION/main/pg_hba.conf"
-PG_DIR="/var/lib/postgresql/$PG_VERSION/main"
+PG_CONF="/var/lib/pgsql/$PG_VERSION/data/postgresql.conf"
+PG_HBA="/var/lib/pgsql/$PG_VERSION/data/pg_hba.conf"
+PG_DIR="/var/lib/pgsql/$PG_VERSION/data"
 
 # Edit postgresql.conf to change listen address to '*':
 sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" "$PG_CONF"
@@ -79,11 +69,16 @@ echo "host    all             all             all                     md5" >> "$
 echo "client_encoding = utf8" >> "$PG_CONF"
 
 # Restart so that all new config is loaded:
-service postgresql restart
+systemctl restart "postgresql-$PG_VERSION.service"
+
+# Install git and clone pagila database
+yum -y install git
+cd /var/lib/pgsql
+git clone https://github.com/devrimgunduz/pagila.git
 
 cat << EOF | su - postgres -c psql
 -- Create the database user:
-CREATE USER $APP_DB_USER WITH PASSWORD '$APP_DB_PASS';
+CREATE USER $APP_DB_USER WITH SUPERUSER LOGIN PASSWORD '$APP_DB_PASS';
 
 -- Create the database:
 CREATE DATABASE $APP_DB_NAME WITH OWNER=$APP_DB_USER
@@ -91,6 +86,11 @@ CREATE DATABASE $APP_DB_NAME WITH OWNER=$APP_DB_USER
                                   LC_CTYPE='en_US.utf8'
                                   ENCODING='UTF8'
                                   TEMPLATE=template0;
+
+-- Insert data to pagila database
+\c pagila
+\i /var/lib/pgsql/pagila/pagila-schema.sql
+\i /var/lib/pgsql/pagila/pagila-data.sql
 EOF
 
 # Tag the provision time:
@@ -99,3 +99,8 @@ date > "$PROVISIONED_ON"
 echo "Successfully created PostgreSQL dev virtual machine."
 echo ""
 print_db_usage
+
+sed -i s/^SELINUX=.*$/SELINUX=disabled/ /etc/selinux/config
+systemctl disable firewalld
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+reboot
