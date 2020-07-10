@@ -1,23 +1,24 @@
 ### What is it?
 
-A Vagrant configuration that starts up a PostgreSQL database in a virtual machine for local application development.
+A Vagrant configuration that starts up a PostgreSQL database in a virtual machine. This was original forked from https://github.com/jackdb/pg-app-dev-vm and modified for the purpose of creating a postgreSQL test environment. It includes the Pagila sample database that was cloned from https://github.com/devrimgunduz/pagila.git
 
 ### Installation
 
 First install [Vagrant] and [Virtual Box].
 
-Then, run the following to create a new PostgreSQL app dev virtual machine:
+Then, run the following to create a new PostgreSQL pagila database virtual machine:
 
-	# Clone it locally:
-    $ git clone https://github.com/jackdb/pg-app-dev-vm myapp
+    
+    # Clone it locally:
+    $ git clone https://github.com/berkanyiildirim/postgres-pagila-vm.git pg-pagila
 
     # Enter the cloned directory:
-    $ cd myapp
+    $ cd pg-pagila
 
     # Delete the old .git and README:
     $ rm -rf README.md .git
-
-    # Optionally edit the database username/password:
+    
+    # Optionally edit the database username/password and PostgreSQL version (default 12):
     $ $EDITOR Vagrant-setup/bootstrap.sh
 
 ### Usage
@@ -30,7 +31,7 @@ Then, run the following to create a new PostgreSQL app dev virtual machine:
 
 ### What does it do?
 
-It creates a virtual server running Ubuntu 14.04 with the latest version of PostgreSQL (*as of writing 9.4*) installed. It also edits the PostgreSQL configuration files to allow network access and creates a database user/database for your application to use.
+It creates a virtual server running Centos7 with the latest version of PostgreSQL (*as of writing 12*) installed. It setup Pagila database and edits the PostgreSQL configuration files to allow network access and creates a database user/database for your application to use. 
 
 Once it has started up it will print out how to access the database on the virtual machine. It will look something like this:
 
@@ -40,24 +41,24 @@ Once it has started up it will print out how to access the database on the virtu
     Your PostgreSQL database has been setup and can be accessed on your local machine on the forwarded port (default: 15432)
       Host: localhost
       Port: 15432
-      Database: myapp
-      Username: myapp
+      Database: pagila
+      Username: pagila
       Password: dbpass
 
     Admin access to postgres user via VM:
       vagrant ssh
       sudo su - postgres
 
-    psql access to app database user via VM:
+    psql access to pagila database user via VM:
       vagrant ssh
       sudo su - postgres
-      PGUSER=myapp PGPASSWORD=dbpass psql -h localhost myapp
+      PGUSER=pagila PGPASSWORD=dbpass psql -h localhost pagila
 
     Env variable for application development:
-      DATABASE_URL=postgresql://myapp:dbpass@localhost:15432/myapp
+      DATABASE_URL=postgresql://pagila:dbpass@localhost:15432/pagila
 
     Local command to access the database via psql:
-      PGUSER=myapp PGPASSWORD=dbpass psql -h localhost -p 15432 myapp
+      PGUSER=pagila PGPASSWORD=dbpass psql -h localhost -p 15432 pagila
 
 ### Why use the shell provisioner?
 
