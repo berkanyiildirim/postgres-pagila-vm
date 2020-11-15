@@ -16,9 +16,9 @@ Then, run the following to create a new PostgreSQL pagila database virtual machi
     $ cd pg-pagila
 
     # Delete the old .git and README:
-    $ rm -rf README.md .git
+    $ rm -rf README.md .git LICENSE
     
-    # Optionally edit the database username/password and PostgreSQL version (default 12):
+    # Optionally edit the database username/password and PostgreSQL version (default 13):
     $ $EDITOR Vagrant-setup/bootstrap.sh
 
 ### Usage
