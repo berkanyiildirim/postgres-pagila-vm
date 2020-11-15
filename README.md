@@ -10,7 +10,7 @@ Then, run the following to create a new PostgreSQL pagila database virtual machi
 
     
     # Clone it locally:
-    $ git clone https://github.com/berkanyiildirim/postgres-pagila-vm.git pg-pagila
+    $ git clone https://github.com/berkanyiildirim/postgresql-pagila-vm.git pg-pagila
 
     # Enter the cloned directory:
     $ cd pg-pagila
@@ -31,7 +31,7 @@ Then, run the following to create a new PostgreSQL pagila database virtual machi
 
 ### What does it do?
 
-It creates a virtual server running Centos7 with the latest version of PostgreSQL (*as of writing 12*) installed. It setup Pagila database and edits the PostgreSQL configuration files to allow network access. 
+It creates a virtual server running Centos7 with the latest version of PostgreSQL (*as of writing 13*) installed. It setup Pagila database and edits the PostgreSQL configuration files to allow network access. 
 
 Once it has started up it will print out how to access the database on the virtual machine. It will look something like this:
 
