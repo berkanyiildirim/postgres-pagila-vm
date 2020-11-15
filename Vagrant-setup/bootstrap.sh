@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 # Edit the following to change the name of the database user that will be created:
 APP_DB_USER=pagila
 APP_DB_PASS=dbpass
@@ -7,6 +9,12 @@ APP_DB_NAME=$APP_DB_USER
 
 # Edit the following to change the version of PostgreSQL that is installed
 PG_VERSION=13
+
+
+# Make sure we get UTF-8
+locale-gen en_US.UTF-8
+update-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8
+source /etc/default/locale
 
 ###########################################################
 # Changes below this line are probably not necessary
